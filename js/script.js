@@ -48,16 +48,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// Опеределяем разниуц между окончанием акции и текущим временем
 	function getTimeRemaining(endtime) {
+		let days, hours, minutes, seconds;
 		// Получаем количество миллисекунд
 		const time = Date.parse(endtime) - Date.parse(new Date());
-		// Получаем количество дней
-		const days = Math.floor(time / (1000 * 60 * 60 * 24));
-		// Получаем количество часов
-		const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
-		// Получаем количество минут
-		const minutes = Math.floor((time / 1000 / 60) % 60);
-		// Получаем количество секунд
-		const seconds = Math.floor((time / 1000) % 60);
+
+		// Проверяем таймер на отрицательные значения
+		if (time <= 0) {
+			days = 0;
+			hours = 0;
+			minutes = 0;
+			seconds = 0;
+		} else {
+			// Получаем количество дней
+			days = Math.floor(time / (1000 * 60 * 60 * 24));
+			// Получаем количество часов
+			hours = Math.floor((time / (1000 * 60 * 60)) % 24);
+			// Получаем количество минут
+			minutes = Math.floor((time / 1000 / 60) % 60);
+			// Получаем количество секунд
+			seconds = Math.floor((time / 1000) % 60);
+		}
 
 		return {
 			total: time,
