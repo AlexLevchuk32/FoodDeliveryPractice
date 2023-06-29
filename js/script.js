@@ -124,12 +124,16 @@ window.addEventListener('DOMContentLoaded', () => {
 	const modalCloseBtn = document.querySelector('[data-close]');
 
 	// Показываем модальное окно
+	function showModal() {
+		modal.classList.add('show');
+		modal.classList.remove('hide');
+		document.body.style.overflow = 'hidden';
+		// Если пользователь сам открыл модальное окно, то убираем интервал
+		clearInterval(modalTimerId);
+	}
+
 	modalBtns.forEach((btn) => {
-		btn.addEventListener('click', () => {
-			modal.classList.add('show');
-			modal.classList.remove('hide');
-			document.body.style.overflow = 'hidden';
-		});
+		btn.addEventListener('click', showModal);
 	});
 
 	// Скрываем модальное окно
@@ -153,4 +157,21 @@ window.addEventListener('DOMContentLoaded', () => {
 			closeModal();
 		}
 	});
+
+	// Вызов модального окна через определенное время
+	const modalTimerId = setTimeout(showModal, 60000);
+
+	// Показываем модальное окно, если пользователь долистал до конца страницы
+	function showModalByScroll() {
+		if (
+			window.scrollY + document.documentElement.clientHeight >=
+			document.documentElement.scrollHeight
+		) {
+			showModal();
+			// Убираем обработчик события по достижения конца страницы
+			window.removeEventListener('scroll', showModalByScroll);
+		}
+	}
+
+	window.addEventListener('scroll', showModalByScroll);
 });
