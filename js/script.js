@@ -46,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	// Устанавливаем даут окончания акции
 	const deadline = '2023-08-31';
 
-	// Опеределяем разниуц между окончанием акции и текущим временем
+	// Опеределяем разницу между окончанием акции и текущим временем
 	function getTimeRemaining(endtime) {
 		let days, hours, minutes, seconds;
 		// Получаем количество миллисекунд
@@ -115,4 +115,42 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	setClock('.timer', deadline);
+
+	// ==================================================================================================================================================================================================================
+	// Модальное окно
+
+	const modalBtns = document.querySelectorAll('[data-modal]');
+	const modal = document.querySelector('.modal');
+	const modalCloseBtn = document.querySelector('[data-close]');
+
+	// Показываем модальное окно
+	modalBtns.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			modal.classList.add('show');
+			modal.classList.remove('hide');
+			document.body.style.overflow = 'hidden';
+		});
+	});
+
+	// Скрываем модальное окно
+	function closeModal() {
+		modal.classList.add('hide');
+		modal.classList.remove('show');
+		document.body.style.overflow = '';
+	}
+
+	modalCloseBtn.addEventListener('click', closeModal);
+
+	// Закрываем модальное окно по клику на оверлей или на кнопку Esc
+	modal.addEventListener('click', (event) => {
+		if (event.target === modal) {
+			closeModal();
+		}
+	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Escape' && modal.classList.contains('show')) {
+			closeModal();
+		}
+	});
 });
