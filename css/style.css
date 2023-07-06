@@ -386,7 +386,7 @@ a {
 .menu .container {
 	display: flex;
 	justify-content: space-between;
-	align-items: flex-start;
+	align-items: stretch;
 }
 .menu .title {
 	text-align: center;
@@ -398,6 +398,9 @@ a {
 	background: rgba(249, 254, 126, 0.25);
 }
 .menu__item {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
 	width: 320px;
 	min-height: 450px;
 	background: #fff;
@@ -419,6 +422,7 @@ a {
 .menu__item-descr {
 	margin-top: 20px;
 	padding: 0 20px;
+	margin-bottom: auto;
 }
 .menu__item-divider {
 	width: 100%;
