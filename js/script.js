@@ -159,7 +159,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// Вызов модального окна через определенное время
-	// const modalTimerId = setTimeout(showModal, 60000);
+	const modalTimerId = setTimeout(showModal, 60000);
 
 	// Показываем модальное окно, если пользователь долистал до конца страницы
 	function showModalByScroll() {
@@ -250,4 +250,61 @@ window.addEventListener('DOMContentLoaded', () => {
 		'.menu .container',
 		'menu__item',
 	).render();
+
+	// ==================================================================================================================================================================================================================
+	// Формы, отправка данных на сервер
+
+	const forms = document.querySelectorAll('form');
+
+	const message = {
+		loading: 'Загрузка',
+		success: 'Спасибо! Скоро мы с вами свяжемся.',
+		failure: 'Что-то пошло не так...',
+	};
+
+	function postData(form) {
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+
+			// Создаем форму статуса сообщения об отправке
+			const statusMessage = document.createElement('div');
+			statusMessage.classList.add('status');
+			statusMessage.textContent = message.loading;
+			form.append(statusMessage);
+
+			const request = new XMLHttpRequest();
+			request.open('POST', '/server.php');
+
+			// Заголовки запроса устанавливать не обязательно, он установится автоматически
+			request.setRequestHeader('Content-type', 'application/json');
+			const formData = new FormData(form);
+
+			// Собираем данные с формы и помещаем их в произвольный объект
+			const object = {};
+			formData.forEach((value, key) => {
+				object[key] = value;
+			});
+
+			const json = JSON.stringify(object);
+
+			request.send(json);
+
+			request.addEventListener('load', () => {
+				if (request.status === 200) {
+					console.log(request.response);
+					statusMessage.textContent = message.success;
+					form.reset();
+					setTimeout(() => {
+						statusMessage.remove();
+					}, 2000);
+				} else {
+					statusMessage.textContent = message.failure;
+				}
+			});
+		});
+	}
+
+	forms.forEach((item) => {
+		postData(item);
+	});
 });
