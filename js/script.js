@@ -121,7 +121,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const modalBtns = document.querySelectorAll('[data-modal]');
 	const modal = document.querySelector('.modal');
-	const modalCloseBtn = document.querySelector('[data-close]');
 
 	// Показываем модальное окно
 	function showModal() {
@@ -143,11 +142,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.body.style.overflow = '';
 	}
 
-	modalCloseBtn.addEventListener('click', closeModal);
-
 	// Закрываем модальное окно по клику на оверлей или на кнопку Esc
+	// + вешаем обработчик событий на динамически созданные элементы
 	modal.addEventListener('click', (event) => {
-		if (event.target === modal) {
+		if (event.target === modal || event.target.getAttribute('data-close') == '') {
 			closeModal();
 		}
 	});
@@ -257,7 +255,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const forms = document.querySelectorAll('form');
 
 	const message = {
-		loading: 'Загрузка',
+		loading: '/img/spinner/005 spinner.svg',
 		success: 'Спасибо! Скоро мы с вами свяжемся.',
 		failure: 'Что-то пошло не так...',
 	};
@@ -267,10 +265,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			event.preventDefault();
 
 			// Создаем форму статуса сообщения об отправке
-			const statusMessage = document.createElement('div');
-			statusMessage.classList.add('status');
-			statusMessage.textContent = message.loading;
-			form.append(statusMessage);
+			const statusMessage = document.createElement('img');
+			statusMessage.src = message.loading;
+			statusMessage.style.cssText = `
+				display: block;
+				margin: 0 auto;
+			`;
+			form.insertAdjacentElement('afterend', statusMessage);
 
 			const request = new XMLHttpRequest();
 			request.open('POST', '/server.php');
@@ -292,13 +293,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			request.addEventListener('load', () => {
 				if (request.status === 200) {
 					console.log(request.response);
-					statusMessage.textContent = message.success;
+					showThanksModal(message.success);
 					form.reset();
-					setTimeout(() => {
-						statusMessage.remove();
-					}, 2000);
+					statusMessage.remove();
 				} else {
-					statusMessage.textContent = message.failure;
+					showThanksModal(message.failure);
 				}
 			});
 		});
@@ -307,4 +306,33 @@ window.addEventListener('DOMContentLoaded', () => {
 	forms.forEach((item) => {
 		postData(item);
 	});
+
+	function showThanksModal(message) {
+		const prevModalDialog = document.querySelector('.modal__dialog');
+
+		// Скрываем стандартное модальное окно и показываем окно со статусом заказа
+		prevModalDialog.classList.add('hide');
+		showModal();
+
+		// Заполняем модальное окно
+		const thanksModal = document.createElement('div');
+		thanksModal.classList.add('modal__dialog');
+		thanksModal.innerHTML = `
+			<div class='modal__content'>
+				<div class='modal__close' data-close>×</div>
+				<div class='modal__title'>
+					${message}
+				</div>
+			</div>
+		`;
+
+		// Удаляем модальное окно
+		document.querySelector('.modal').append(thanksModal);
+		setTimeout(() => {
+			thanksModal.remove();
+			prevModalDialog.classList.add('show');
+			prevModalDialog.classList.remove('hide');
+			closeModal();
+		}, 4000);
+	}
 });
