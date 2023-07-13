@@ -218,36 +218,55 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// Создаем новые объекты
-	new MenuCard(
-		'img/tabs/vegy.jpg',
-		'vegy',
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		7,
-		'.menu .container',
-		'menu__item',
-	).render();
+	// Получаем данные для карточек из файла db.json
+	const getResource = async (url) => {
+		const result = await fetch(url);
 
-	new MenuCard(
-		'img/tabs/elite.jpg',
-		'elite',
-		'Меню “Премиум”',
-		'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное фрукты - ресторанное меню без похода в ресторан!',
-		13,
-		'.menu .container',
-		'menu__item',
-	).render();
+		// Обрабатываем ошибки при выполнении запроса
+		// Эта часть обязательна, так как fetch выполнится в любом случае, кроме полного
+		// отчутствия интернета.
+		if (!result.ok) {
+			throw new Error(`Could not fetch ${url}, status: ${result.status}`);
+		}
 
-	new MenuCard(
-		'img/tabs/post.jpg',
-		'post',
-		'Меню "Постное"',
-		'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-		6,
-		'.menu .container',
-		'menu__item',
-	).render();
+		return await result.json();
+	};
+
+	// // Создаем новые объекты меню и отрисовываем их на странице
+	// getResource('http://localhost:3000/menu').then((data) => {
+	// 	data.forEach(({ img, altimg, title, descr, price }) => {
+	// 		new MenuCard(img, altimg, title, descr, price, '.menu .container').render();
+	// 	});
+	// });
+
+	// Отрисовываем элементы на странице без использования классов и шаблонизации,
+	// а напрямую с сервера или файла БД.
+	getResource('http://localhost:3000/menu').then((data) => {
+		createCard(data);
+	});
+
+	function createCard(data) {
+		data.forEach(({ img, altimg, title, descr, price }) => {
+			const element = document.createElement('div');
+
+			price = price * 80;
+
+			element.classList.add('menu__item');
+
+			element.innerHTML = `
+				<img src=${img} alt=${altimg} />
+				<h3 class="menu__item-subtitle">${title}</h3>
+				<div class="menu__item-descr">${descr}</div>
+				<div class="menu__item-divider"></div>
+				<div class="menu__item-price">
+					<div class="menu__item-cost">Цена:</div>
+					<div class="menu__item-total"><span>${price}</span> руб/день</div>
+				</div>
+			`;
+
+			document.querySelector('.menu .container').append(element);
+		});
+	}
 
 	// ==================================================================================================================================================================================================================
 	// Формы, отправка данных на сервер
@@ -260,7 +279,18 @@ window.addEventListener('DOMContentLoaded', () => {
 		failure: 'Что-то пошло не так...',
 	};
 
-	function postData(form) {
+	const postData = async (url, data) => {
+		const result = await fetch(url, {
+			method: 'POST',
+			// Заголовки запроса устанавливать не обязательно, он установится автоматически
+			headers: { 'Content-type': 'application/json' },
+			body: data,
+		});
+
+		return await result.json();
+	};
+
+	function bindPostData(form) {
 		form.addEventListener('submit', (event) => {
 			event.preventDefault();
 
@@ -276,18 +306,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			const formData = new FormData(form);
 
 			// Собираем данные с формы и помещаем их в произвольный объект
-			const object = {};
-			formData.forEach((value, key) => {
-				object[key] = value;
-			});
+			// При помощи метода formData.entries превращаем все данные с формы в массив массивов.
+			// И далее при помощи метода Object.fromEntries() делаем обратную операию и
+			// превращаем наш объект в классический объект и после этого классический объект
+			// превращаем в json и отправляем его на сервер.
+			const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-			fetch('/server.php', {
-				method: 'POST',
-				// Заголовки запроса устанавливать не обязательно, он установится автоматически
-				headers: { 'Content-type': 'application/json' },
-				body: JSON.stringify(object),
-			})
-				.then((data) => data.text())
+			postData('http://localhost:3000/requests', json)
 				.then((data) => {
 					console.log(data);
 					showThanksModal(message.success);
@@ -304,7 +329,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	forms.forEach((item) => {
-		postData(item);
+		bindPostData(item);
 	});
 
 	function showThanksModal(message) {
@@ -335,8 +360,4 @@ window.addEventListener('DOMContentLoaded', () => {
 			closeModal();
 		}, 4000);
 	}
-
-	fetch('http://localhost:3000/menu')
-		.then((data) => data.json())
-		.then((res) => console.log(res));
 });
