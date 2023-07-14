@@ -299,6 +299,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		return await result.json();
 	};
 
+	// Создаем привязку к форме
 	function bindPostData(form) {
 		form.addEventListener('submit', (event) => {
 			event.preventDefault();
@@ -341,6 +342,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		bindPostData(item);
 	});
 
+	// Показываем модальное окно
 	function showThanksModal(message) {
 		const prevModalDialog = document.querySelector('.modal__dialog');
 
@@ -369,4 +371,63 @@ window.addEventListener('DOMContentLoaded', () => {
 			closeModal();
 		}, 4000);
 	}
+
+	// ==================================================================================================================================================================================================================
+	// Слайдер Вариант 1
+
+	// Получаем элементы со страницы
+	const slides = document.querySelectorAll('.offer__slide');
+	const prev = document.querySelector('.offer__slider-prev');
+	const nex = document.querySelector('.offer__slider-next');
+	const current = document.querySelector('#current');
+	const total = document.querySelector('#total');
+
+	// Создаем начальный индекс для картинки слайдера
+	let slideIndex = 1;
+
+	// Инициализируем слайдер
+	showSlides(slideIndex);
+
+	// Отображаем правильное общее количество слайдов
+	if (slides.length < 10) {
+		total.textContent = `0${slides.length}`;
+	} else {
+		total.textContent = slides.length;
+	}
+
+	// Отображение слайдов
+	function showSlides(n) {
+		// Если слайдов больше n, устанавливаем значение индекса в начало
+		if (n > slides.length) {
+			slideIndex = 1;
+		}
+
+		// Если слайдов меньше 1, устанавливаем значение индекса в конец
+		if (n < 1) {
+			slideIndex = slides.length;
+		}
+
+		slides.forEach((item) => (item.style.display = 'none'));
+
+		slides[slideIndex - 1].style.display = 'block';
+
+		// Отображаем номер текущего слайда
+		if (slides.length < 10) {
+			current.textContent = `0${slideIndex}`;
+		} else {
+			current.textContent = slideIndex;
+		}
+	}
+
+	function plusSlides(n) {
+		showSlides((slideIndex += n));
+	}
+
+	prev.addEventListener('click', () => {
+		plusSlides(-1);
+	});
+
+	nex.addEventListener('click', () => {
+		plusSlides(+1);
+	});
 });
