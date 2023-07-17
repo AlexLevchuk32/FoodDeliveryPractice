@@ -479,12 +479,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	// Превращаем строку в числовой тип данных и убираем все буквы
+	function removeLetters(str) {
+		return +str.replace(/\D/g, '');
+	}
+
 	// Показываем следующий слайд
 	next.addEventListener('click', () => {
-		if (offset == +width.slice(0, width.length - 2) * (slides.length - 1)) {
+		if (offset == removeLetters(width) * (slides.length - 1)) {
 			offset = 0;
 		} else {
-			offset += +width.slice(0, width.length - 2);
+			offset += removeLetters(width);
 		}
 
 		slidesField.style.transform = `translateX(-${offset}px)`;
@@ -501,9 +506,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	prev.addEventListener('click', () => {
 		if (offset == 0) {
-			offset = +width.slice(0, width.length - 2) * (slides.length - 1);
+			offset = removeLetters(width) * (slides.length - 1);
 		} else {
-			offset -= +width.slice(0, width.length - 2);
+			offset -= removeLetters(width);
 		}
 
 		slidesField.style.transform = `translateX(-${offset}px)`;
@@ -583,7 +588,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			// Меняем индекс активного слайда
 			slideIndex = slideTo;
 			// Преобразуем строчное значение в числовое
-			offset = +width.slice(0, width.length - 2) * (slideTo - 1);
+			offset = removeLetters(width) * (slideTo - 1);
 
 			// Смещение слайда
 			slidesField.style.transform = `translateX(-${offset}px)`;
@@ -595,4 +600,137 @@ window.addEventListener('DOMContentLoaded', () => {
 			showActiveDot();
 		});
 	});
+
+	// ==================================================================================================================================================================================================================
+	// Калькулятор калорий
+
+	// Получаем элементы
+	const result = document.querySelector('.calculating__result span');
+	let sex;
+	let height;
+	let weight;
+	let age;
+	let ratio;
+
+	// Проверяем сохраненые данные в локальном хранилище
+	if (localStorage.getItem('sex')) {
+		sex = localStorage.getItem('sex');
+	} else {
+		sex = 'female';
+		localStorage.setItem('sex', 'female');
+	}
+
+	if (localStorage.getItem('ratio')) {
+		ratio = localStorage.getItem('ratio');
+	} else {
+		ratio = '1.375';
+		localStorage.setItem('ratio', '1.375');
+	}
+
+	// Расчет количества калорий
+	function calcTotal() {
+		if (!sex || !height || !weight || !age || !ratio) {
+			result.textContent = '____';
+			return;
+		}
+
+		if (sex === 'female') {
+			result.textContent = Math.round(
+				(447.6 + (9.2 * weight + 3.1 * height - 4.3 * age)) * ratio,
+			);
+		} else {
+			result.textContent = Math.round(
+				(88.36 + (13.4 * weight + 4.8 * height - 5.7 * age)) * ratio,
+			);
+		}
+	}
+
+	calcTotal();
+
+	// Инициализация калькулятора со значениями сохраненными в локальном хранилище
+	function initLocalSettings(selector, activeClass) {
+		const elements = document.querySelectorAll(selector);
+
+		elements.forEach((elem) => {
+			elem.classList.remove(activeClass);
+			if (elem.getAttribute('id') === localStorage.getItem('sex')) {
+				elem.classList.add(activeClass);
+			}
+			if (elem.getAttribute('data-ratio') === localStorage.getItem('ratio')) {
+				elem.classList.add(activeClass);
+			}
+		});
+	}
+
+	initLocalSettings('#gender div', 'calculating__choose-item_active');
+	initLocalSettings('.calculating__choose_big div', 'calculating__choose-item_active');
+
+	// Получаем значения статичных элементов (input)
+	function getStaticInformation(selector, activeClass) {
+		const elements = document.querySelectorAll(selector);
+
+		// Обработка события click на статичных элементах, именно когда кликаем точно в input,
+		// а не рядом с элементом.
+		elements.forEach((elem) => {
+			elem.addEventListener('click', (event) => {
+				if (event.target.getAttribute('data-ratio')) {
+					ratio = +event.target.getAttribute('data-ratio');
+					localStorage.setItem('ratio', +event.target.getAttribute('data-ratio'));
+				} else {
+					sex = event.target.getAttribute('id');
+					localStorage.setItem('sex', event.target.getAttribute('id'));
+				}
+
+				elements.forEach((elem) => {
+					elem.classList.remove(activeClass);
+				});
+
+				event.target.classList.add(activeClass);
+
+				// console.log(ratio, sex);
+
+				calcTotal();
+			});
+		});
+	}
+
+	getStaticInformation('#gender div', 'calculating__choose-item_active');
+	getStaticInformation(
+		'.calculating__choose_big div',
+		'calculating__choose-item_active',
+	);
+
+	// Обрабатываем каждый отдельный input
+	function getDynamicInformation(selector) {
+		const input = document.querySelector(selector);
+
+		// Проверяем соответсвие строки
+		input.addEventListener('input', () => {
+			// Проверяем, что в инпуты вводятся только цифры, используем регулярные выражения
+			// match(/\D/g) - получаем не цифры, глобально
+			if (input.value.match(/\D/g)) {
+				input.style.border = '1px solid red';
+			} else {
+				input.style.border = 'none';
+			}
+
+			switch (input.getAttribute('id')) {
+				case 'height':
+					height = +input.value;
+					break;
+				case 'weight':
+					weight = +input.value;
+					break;
+				case 'age':
+					age = +input.value;
+					break;
+			}
+
+			calcTotal();
+		});
+	}
+
+	getDynamicInformation('#height');
+	getDynamicInformation('#weight');
+	getDynamicInformation('#age');
 });
